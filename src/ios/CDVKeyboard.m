@@ -88,6 +88,16 @@
                                             usingBlock:^(NSNotification* notification) {
             [weakSelf.commandDelegate evalJs:@"Keyboard.fireOnHiding();"];
             weakSelf.keyboardIsVisible = NO;
+            // Fix keyboard displacement bug in iOS 12 WKWebView
+            // Set the scroller to it's initial offset position. Case the keyboard hides and the view has to scroll back
+            if (@available(iOS 12.0, *)) {
+                   for(UIView* v in self.webView.subviews){
+                       if([v isKindOfClass:NSClassFromString(@"WKScrollView")]){
+                           UIScrollView *scrollView    = (UIScrollView*)v;
+                           [scrollView setContentOffset:CGPointMake(0, 0)];
+                       }
+                   }
+               }
                                             }];
 
     _shrinkViewKeyboardWillChangeFrameObserver = [nc addObserverForName:UIKeyboardWillChangeFrameNotification
@@ -183,11 +193,11 @@ static IMP WKOriginalImp;
     screen = [self.webView convertRect:screen fromView:nil];
 
     // if the webview is below the status bar, offset and shrink its frame
-    //if ([self settingForKey:@"StatusBarOverlaysWebView"] != nil && ![[self settingForKey:@"StatusBarOverlaysWebView"] boolValue]) {
+    if ([self settingForKey:@"StatusBarOverlaysWebView"] != nil && ![[self settingForKey:@"StatusBarOverlaysWebView"] boolValue]) {
         CGRect full, remainder;
         CGRectDivide(screen, &remainder, &full, statusBar.size.height, CGRectMinYEdge);
         screen = full;
-    //}
+    }
 
     // Get the intersection of the keyboard and screen and move the webview above it
     // Note: we check for _shrinkView at this point instead of the beginning of the method to handle
@@ -200,7 +210,7 @@ static IMP WKOriginalImp;
     }
 
     // A view's frame is in its superview's coordinate system so we need to convert again
-    self.webView.frame = screen;
+    self.webView.frame = [self.webView.superview convertRect:screen fromView:self.webView];
 }
 
 #pragma mark UIScrollViewDelegate
