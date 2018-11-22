@@ -183,11 +183,11 @@ static IMP WKOriginalImp;
     screen = [self.webView convertRect:screen fromView:nil];
 
     // if the webview is below the status bar, offset and shrink its frame
-    //if ([self settingForKey:@"StatusBarOverlaysWebView"] != nil && ![[self settingForKey:@"StatusBarOverlaysWebView"] boolValue]) {
+    if ([self settingForKey:@"StatusBarOverlaysWebView"] != nil && ![[self settingForKey:@"StatusBarOverlaysWebView"] boolValue]) {
         CGRect full, remainder;
         CGRectDivide(screen, &remainder, &full, statusBar.size.height, CGRectMinYEdge);
         screen = full;
-    //}
+    }
 
     // Get the intersection of the keyboard and screen and move the webview above it
     // Note: we check for _shrinkView at this point instead of the beginning of the method to handle
@@ -200,7 +200,7 @@ static IMP WKOriginalImp;
     }
 
     // A view's frame is in its superview's coordinate system so we need to convert again
-    self.webView.frame = [self.webView.superview convertRect:screen fromView:self.webView];
+    self.webView.frame = screen;
 }
 
 #pragma mark UIScrollViewDelegate
